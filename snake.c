@@ -23,6 +23,8 @@ void snake_set(char (*ptr)[map_size_y], struct snake *s);
 void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y);
 void append(struct snake *s, struct point *p, short int difficulty);
 
+void gameOverSound();
+
 int main() {
 	COORD begin;
 	begin.X=0;
@@ -122,7 +124,7 @@ int main() {
 			set_point(point_ptr, t_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
 			if( compare_point(snake_ptr, point_ptr) )
 			{
-				Beep(300,30);
+				pointScoredSound();
 				append(snake_ptr,point_ptr,difficulty);
 				random_point(snake_ptr,point_ptr, t_ptr);
 				set_point(point_ptr, t_ptr);
@@ -229,12 +231,33 @@ void snake_set(char (*ptr)[map_size_y], struct snake *s) //ustawia glowke na poc
 	ptr[s->head->_x][s->head->_y] = 178;
 }
 
+bool gameOverConditionsFulfilled(struct snake *s)
+{
+    if( s->head->_x >= map_size_x-1 ||s->head->_x <= 0 || s->head->_y >= (map_size_y-1) || s->head->_y <= 0)
+        return true;
+    else
+        return false;
+}
+
+
+bool selfCollision(struct snake *s, struct node *element){
+    if( (s->head->_x == element->_x) && (s->head->_y == element->_y) )
+        return true;
+    else
+        return false;
+}
+
+void gameOverSound()
+{
+    Beep(100,400);
+}
+
 void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y) //efekt kilku dni debugowania i pisania wszystkiego od nowa
 {
-	if( s->head->_x >= map_size_x-1 ||s->head->_x <= 0 || s->head->_y >= (map_size_y-1) || s->head->_y <= 0) //warunki konczace gre
+	if(gameOverConditionsFulfilled(s))
 	{
 			s->status=true;
-			Beep(100,400);
+			gameOverSound();
 	}
 	else
 	{
@@ -280,11 +303,13 @@ void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y) 
 			}
 
 			if(s->tail)
-				if( (s->head->_x==element->_x && s->head->_y==element->_y) ) //kolizja z wezem
+            {
+				if(selfCollision(s, element))
 				{
-					Beep(100,400);
+				    gameOverSound();
 					s->status=true;
 				}
+            }
 			s->field[element->_x][element->_y] = true;
 			s->field[s->last_x][s->last_y] = false;
 

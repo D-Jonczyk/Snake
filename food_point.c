@@ -1,5 +1,9 @@
 #include "food_point.h"
 
+void pointScoredSound(){
+    Beep(300,30);
+}
+
 void random_point(struct snake *s, struct point *p, char (*ptr)[map_size_y]) //randomuje punkt i sprawdza czy pojawil sie na wezu
 {
 	p->x = ( rand() % (map_size_x-2) ) + 1;
