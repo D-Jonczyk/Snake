@@ -13,6 +13,11 @@
 	-jakies podpowiedzi co do klawiszy
 */
 
+char processKeyboardInput(char ch);
+bool pressedWrongKey(char ch);
+bool wrongTurnAngle(char, char);
+
+void initConsoleParameters();
 void board_init(char (*ptr)[map_size_y]);
 void board_print(char (*ptr)[map_size_y], COORD begin);
 void wait(short int);
@@ -33,28 +38,16 @@ int main() {
 	srand(time(NULL));
 	short int difficulty;
 	difficulty = easy;
-	int ch;
-	char choice_d,choice,last;
+	int pressedKey;
+	char choice_d,choice;
 	char tab[map_size_x][map_size_y];
 	char (*t_ptr)[map_size_y]= tab;
 
-	wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
-
-	SetConsoleTitle(TEXT("Snake v1.0"));
-	SMALL_RECT windowSize = {0, 0, 25, 17};
-	SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
-
- 	// zmienna COORD trzymajaca rozmiar bufora:
-	COORD bufferSize = {26, 18};
-  	// zmiana rozmiarow bufora:
-	SetConsoleScreenBufferSize(wHnd, bufferSize);
-  	// wspolrzedne pozycji menu po przegranej
-	COORD game_over;
-	game_over.X = 7;
-	game_over.Y = 3;
+    initConsoleParameters();
 	menu();
 	system("cls");
-	while(choice!='3')			//menu i inicjacja startowych wartosci
+
+	while(choice!='3')	//menu i inicjacja startowych wartosci
 	{
 		menu();
 		choice = menu_option();
@@ -92,37 +85,28 @@ int main() {
 		random_point(snake_ptr,point_ptr, t_ptr);
 		set_point(point_ptr, t_ptr);
 		board_print(t_ptr, begin);
-		ch = 0;
+		pressedKey = 0;
 
 		while(!snake_ptr->status) //glowna petla
 		{
 			if( kbhit() )
 			{
-				last = ch;
-				ch = getch();
-				if(ch == 112){
-					do{
-						ch=last;
-						if(kbhit())
-							ch = getch();
-					}while(ch!=112);
-				}
-
-				if((ch != 80 && ch!=72&&ch!=75&&ch!=77) || abs(ch-last)==8 || abs(ch-last)==2) //((zly klawisz) || zmiana kierunku o 180* || zmiana kierunku o 180*)
-					ch = last;
+                pressedKey = processKeyboardInput(pressedKey);
 			}
 
-			switch(ch)
+			switch(pressedKey)
 			{
-				case 80: movement(t_ptr, snake_ptr, 1, 0);	break;  //down
-				case 72: movement(t_ptr, snake_ptr, -1,0);	break; //up
-				case 75: movement(t_ptr, snake_ptr, 0,-1);	break; //left
-				case 77: movement(t_ptr, snake_ptr, 0,1);	break; //right
+				case KEY_DOWN: movement(t_ptr, snake_ptr, 1, 0);	break;
+				case KEY_UP: movement(t_ptr, snake_ptr, -1,0);	break;
+				case KEY_LEFT: movement(t_ptr, snake_ptr, 0,-1);	break;
+				case KEY_RIGHT: movement(t_ptr, snake_ptr, 0,1);	break;
 				default: ;
 			}
+
 			board_print(t_ptr,begin);
 			set_point(point_ptr, t_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
-			if( compare_point(snake_ptr, point_ptr) )
+
+			if( scoredPoint(snake_ptr, point_ptr) )
 			{
 				pointScoredSound();
 				append(snake_ptr,point_ptr,difficulty);
@@ -134,18 +118,9 @@ int main() {
 
 			if( kbhit() )
 			{
-				last = ch;
-				ch = getch();
-				if(ch == 112){
-					do{
-						ch=last;
-						if(kbhit())
-							ch = getch();
-					}while(ch!=112);
-				}
-				if((ch != 80 && ch!=72&&ch!=75&&ch!=77) || abs(ch-last)==8 || abs(ch-last)==2) //((zly klawisz) || zmiana kierunku o 180* || zmiana kierunku o 180*)
-					ch = last;
+                pressedKey = processKeyboardInput(pressedKey);
 			}
+
 		printf("Wynik: %ld\t\n", snake_ptr->score);
 		} //koniec petli gry
 
@@ -154,6 +129,59 @@ int main() {
 		free(snake_ptr);
 		free(point_ptr);
 	}//koniec menu
+}
+
+char processKeyboardInput(char pressedKey)
+{
+    char last = pressedKey;
+    pressedKey = getch();
+
+    if(pressedKey == PAUSE_KEY){
+        do{
+            pressedKey = last;
+            if(kbhit())
+                pressedKey = getch();
+
+        }while(pressedKey != PAUSE_KEY);
+    }
+
+    if( pressedWrongKey(pressedKey) || wrongTurnAngle(pressedKey, last) ) //(wrong button || 180° turn)
+        pressedKey = last;
+
+    return pressedKey;
+}
+
+bool wrongTurnAngle(char pressedKey, char last)
+{
+    if( abs(pressedKey-last) == 8 || abs(pressedKey-last) == 2 )
+        return true;
+    else
+        return false;
+}
+
+bool pressedWrongKey(char pressedKey)
+{
+    if(pressedKey != KEY_DOWN && pressedKey != KEY_UP && pressedKey != KEY_LEFT && pressedKey != KEY_RIGHT )
+        return true;
+    else
+        return false;
+}
+
+void initConsoleParameters()
+{
+    wHnd = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	SetConsoleTitle(TEXT("Snake v1.0"));
+	SMALL_RECT windowSize = {0, 0, 25, 17};
+	SetConsoleWindowInfo(wHnd, TRUE, &windowSize);
+
+ 	// zmienna COORD trzymajaca rozmiar bufora:
+	COORD bufferSize = {26, 18};
+  	// zmiana rozmiarow bufora:
+	SetConsoleScreenBufferSize(wHnd, bufferSize);
+
+	game_over.X = 7;
+    game_over.Y = 3;
 }
 
 void board_init(char (*ptr)[map_size_y]) //wypelnienie tablicy(mapy)
@@ -188,7 +216,7 @@ void snake_init(struct snake *s) //chyba mozna to bylo krocej napisac ale boje s
 {
 	int i,j;
 	struct node *_head = (struct node*)malloc(sizeof(struct node));
-	struct node *_tail = (struct node*)malloc(sizeof(struct node));
+	//struct node *_tail = (struct node*)malloc(sizeof(struct node));
 	_head->x = 5;
 	_head->y = 5;
 	_head->_x = 5;
@@ -312,7 +340,6 @@ void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y) 
             }
 			s->field[element->_x][element->_y] = true;
 			s->field[s->last_x][s->last_y] = false;
-
 		}while(element->prev);
 	}
 }
@@ -321,6 +348,7 @@ void append(struct snake *s, struct point *p, short int difficulty) //dodaje ele
 {
 	struct node *element = (struct node*)malloc(sizeof(struct node));
 	element->prev = NULL;
+	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
 	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
 		element->_x = s->head->_x;
 		element->_y = s->head->_y;

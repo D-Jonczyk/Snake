@@ -6,6 +6,12 @@
 #include <stdbool.h>
 #include <conio.h>
 
+#define PAUSE_KEY 112
+#define KEY_UP 72
+#define KEY_DOWN 80
+#define KEY_LEFT 75
+#define KEY_RIGHT 77
+
 #define map_size_x 15
 #define map_size_y 25
 
@@ -14,6 +20,7 @@
 #define medium  14
 #define hard  10
 
+COORD game_over;
 
 struct point{
 	int x,y;
