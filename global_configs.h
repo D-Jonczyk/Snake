@@ -12,6 +12,17 @@
 #define KEY_LEFT 75
 #define KEY_RIGHT 77
 
+//ascii characters for board drawing
+#define TOP_LEFT_CORNER 201
+#define BOT_LEFT_CORNER 200
+#define TOP_RIGHT_CORNER 187
+#define BOT_RIGHT_CORNER 188
+#define HORIZONTAL_BORDER 219
+#define VERTICAL_BORDER 186
+#define BOARD_FILL 255
+#define SNAKE_TEXTURE 178
+#define FOOD_TEXTURE 158
+
 #define map_size_x 15
 #define map_size_y 25
 
@@ -20,7 +31,8 @@
 #define medium  14
 #define hard  10
 
-COORD game_over;
+COORD gameOverPosition;
+COORD startPosition;
 
 struct point{
 	int x,y;

@@ -13,17 +13,20 @@
 	-jakies podpowiedzi co do klawiszy
 */
 
+static int difficulty;
+
+void processUserChoice();
 char processKeyboardInput(char ch);
 bool pressedWrongKey(char ch);
 bool wrongTurnAngle(char, char);
 
 void initConsoleParameters();
-void board_init(char (*ptr)[map_size_y]);
+void fillTheBoardWithAscii(char (*ptr)[map_size_y]);
 void board_print(char (*ptr)[map_size_y], COORD begin);
 void wait(short int);
 
 void snake_init(struct snake *s);
-void snake_set(char (*ptr)[map_size_y], struct snake *s);
+void printSnakeAtStartPos(char (*ptr)[map_size_y], struct snake *s);
 
 void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y);
 void append(struct snake *s, struct point *p, short int difficulty);
@@ -31,87 +34,54 @@ void append(struct snake *s, struct point *p, short int difficulty);
 void gameOverSound();
 
 int main() {
-	COORD begin;
-	begin.X=0;
-	begin.Y=0;
-
 	srand(time(NULL));
-	short int difficulty;
 	difficulty = easy;
 	int pressedKey;
-	char choice_d,choice;
+	char choice = 0;
 	char tab[map_size_x][map_size_y];
 	char (*t_ptr)[map_size_y]= tab;
 
     initConsoleParameters();
-	menu();
-	system("cls");
 
-	while(choice!='3')	//menu i inicjacja startowych wartosci
+	while(choice != '3') //program loop
 	{
-		menu();
-		choice = menu_option();
-		switch(choice)
-		{
-			case '1':
-				break;
-			case '2':
-				system("cls");
-				menu_difficulty();
-				choice_d = menu_option();
-				switch(choice_d)
-				{
-					case '1':
-						difficulty = easy;
-						break;
-					case '2':
-						difficulty = medium;
-						break;
-					case '3':
-						difficulty = hard;
-						break;
-				}
-				break;
-			case '3':
-				return 0;
-				break;
-		}
+		printMainMenu();
+		processUserChoice();
 
 		struct snake *snake_ptr = (struct snake*)malloc(sizeof(struct snake));
 		struct point *point_ptr = (struct point*)malloc(sizeof(struct point));
-		board_init(t_ptr);
+		fillTheBoardWithAscii(t_ptr);
 		snake_init(snake_ptr);
-		snake_set(t_ptr,snake_ptr);
-		random_point(snake_ptr,point_ptr, t_ptr);
-		set_point(point_ptr, t_ptr);
-		board_print(t_ptr, begin);
+		printSnakeAtStartPos(t_ptr,snake_ptr);
+		randomFoodPoint(snake_ptr,point_ptr, t_ptr);
+		printFoodPoint(point_ptr, t_ptr);
+		board_print(t_ptr, startPosition);
 		pressedKey = 0;
 
-		while(!snake_ptr->status) //glowna petla
+		while(!snake_ptr->status) //game session loop
 		{
 			if( kbhit() )
 			{
                 pressedKey = processKeyboardInput(pressedKey);
+                switch(pressedKey)
+                {
+                    case KEY_DOWN: movement(t_ptr, snake_ptr, 1, 0);	break;
+                    case KEY_UP: movement(t_ptr, snake_ptr, -1,0);	break;
+                    case KEY_LEFT: movement(t_ptr, snake_ptr, 0,-1);	break;
+                    case KEY_RIGHT: movement(t_ptr, snake_ptr, 0,1);	break;
+                    default: ;
+                }
 			}
 
-			switch(pressedKey)
-			{
-				case KEY_DOWN: movement(t_ptr, snake_ptr, 1, 0);	break;
-				case KEY_UP: movement(t_ptr, snake_ptr, -1,0);	break;
-				case KEY_LEFT: movement(t_ptr, snake_ptr, 0,-1);	break;
-				case KEY_RIGHT: movement(t_ptr, snake_ptr, 0,1);	break;
-				default: ;
-			}
-
-			board_print(t_ptr,begin);
-			set_point(point_ptr, t_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
+			board_print(t_ptr, startPosition);
+			printFoodPoint(point_ptr, t_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
 
 			if( scoredPoint(snake_ptr, point_ptr) )
 			{
 				pointScoredSound();
 				append(snake_ptr,point_ptr,difficulty);
-				random_point(snake_ptr,point_ptr, t_ptr);
-				set_point(point_ptr, t_ptr);
+				randomFoodPoint(snake_ptr,point_ptr, t_ptr);
+				printFoodPoint(point_ptr, t_ptr);
 			}
 
 			wait(difficulty);
@@ -121,14 +91,42 @@ int main() {
                 pressedKey = processKeyboardInput(pressedKey);
 			}
 
-		printf("Wynik: %ld\t\n", snake_ptr->score);
-		} //koniec petli gry
+		printf(" Score: %ld\t\n", snake_ptr->score);
+		} //end of game session
 
-		SetConsoleCursorPosition(wHnd,game_over);
-		printf("Przegrales!\n");
+		SetConsoleCursorPosition(wHnd, gameOverPosition);
+		printf("You lost!\n");
 		free(snake_ptr);
 		free(point_ptr);
-	}//koniec menu
+	}//end of the program
+}
+
+void processUserChoice(){
+    char choice = getUserMenuChoice();
+    switch(choice)
+    {
+        case '1':
+            break;
+        case '2':
+            system("cls");
+            printDifficultyMenu();
+            char choice_d = getUserMenuChoice();
+            switch(choice_d)
+            {
+                case '1':
+                    difficulty = easy;
+                    break;
+                case '2':
+                    difficulty = medium;
+                    break;
+                case '3':
+                    difficulty = hard;
+                    break;
+            }
+            break;
+        case '3':
+            exit(0);
+    }
 }
 
 char processKeyboardInput(char pressedKey)
@@ -180,34 +178,38 @@ void initConsoleParameters()
   	// zmiana rozmiarow bufora:
 	SetConsoleScreenBufferSize(wHnd, bufferSize);
 
-	game_over.X = 7;
-    game_over.Y = 3;
+    startPosition.X=0;
+	startPosition.Y=0;
+
+	gameOverPosition.X = 7;
+    gameOverPosition.Y = 3;
+
+    printMainMenu(); //without it there are black spots in unused area of the console
+	system("cls");
 }
 
-void board_init(char (*ptr)[map_size_y]) //wypelnienie tablicy(mapy)
+void fillTheBoardWithAscii(char (*ptr)[map_size_y])
 {
-	int i,j;
-
+	unsigned int i,j;
 	for(i=0;i<map_size_x;i++)
 	{
 		for(j=0;j<map_size_y;j++)
 		{
-			if(i==0 || i==(map_size_x-1))  //gorna i dolna krawedz mapy
-				ptr[i][j] = 205;
-			else if(j==0 || j==(map_size_y-1))   //boczne krawedzi mapy
-				ptr[i][j] = 186;
+			if(i==0 || i==(map_size_x-1))
+				ptr[i][j] = HORIZONTAL_BORDER;
+			else if(j==0 || j==(map_size_y-1))
+				ptr[i][j] = VERTICAL_BORDER;
 			else
-				ptr[i][j] = 255; //srodek mapy(pusty znak)
+				ptr[i][j] = BOARD_FILL;
 
-		//corners
 			if( i==0 && j==0 )
-				ptr[i][j] = 201;
+				ptr[i][j] = TOP_LEFT_CORNER;
 			if( i==0 && j==(map_size_y-1) )
-				ptr[i][j] = 187;
+				ptr[i][j] = TOP_RIGHT_CORNER;
 			if( i==(map_size_x-1) && j==0 )
-				ptr[i][j] = 200;
+				ptr[i][j] = BOT_LEFT_CORNER;
 			if( i==(map_size_x-1) && j==(map_size_y-1) )
-				ptr[i][j] = 188;
+				ptr[i][j] = BOT_RIGHT_CORNER;
 		}
 	}
 }
@@ -250,13 +252,13 @@ void board_print(char (*ptr)[map_size_y], COORD begin)
 
 void wait(short int difficulty)
 {
-    clock_t koniec = clock() + difficulty * CLOCKS_PER_SEC/100;
-    while( clock() < koniec ) continue;
+    clock_t endTime = clock() + difficulty * CLOCKS_PER_SEC/100;
+    while( clock() < endTime ) continue;
 }
 
-void snake_set(char (*ptr)[map_size_y], struct snake *s) //ustawia glowke na poczatkowe koordynaty
+void printSnakeAtStartPos(char (*ptr)[map_size_y], struct snake *s) //ustawia glowke na poczatkowe koordynaty
 {
-	ptr[s->head->_x][s->head->_y] = 178;
+	ptr[s->head->_x][s->head->_y] = SNAKE_TEXTURE;
 }
 
 bool gameOverConditionsFulfilled(struct snake *s)
@@ -266,7 +268,6 @@ bool gameOverConditionsFulfilled(struct snake *s)
     else
         return false;
 }
-
 
 bool selfCollision(struct snake *s, struct node *element){
     if( (s->head->_x == element->_x) && (s->head->_y == element->_y) )
@@ -295,7 +296,7 @@ void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y) 
 		element->_y += move_y;
 		do
 		{
-			ptr[element->_x][element->_y] = 178;
+			ptr[element->_x][element->_y] = SNAKE_TEXTURE;
 			//gdy waz ma jeden element
 			if(s->tail==NULL)
 			{
