@@ -3,9 +3,9 @@
 
 #include "global_configs.h"
 
-void menu(void);
-char menu_option(void);
-void menu_difficulty(void);
+void printMainMenu(void);
+void printDifficultyMenu(void);
+char getUserMenuChoice(void);
 
 HANDLE wHnd;
 

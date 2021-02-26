@@ -48,7 +48,7 @@ struct snake{
 	struct node *head;
 	struct node *tail;
 	long int score;
-	short int count,last_x,last_y;
+	short int length,last_x,last_y;
 	bool field[map_size_x][map_size_y]; //miejsca w ktorych aktualnie znajduje sie waz
 	bool status; //status gry(false=game over)
 };

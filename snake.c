@@ -15,21 +15,25 @@
 
 static int difficulty;
 
+bool gameOverConditionsFulfilled(struct snake *s);
+void checkForSelfCollision(struct snake *, struct node *);
 void processUserChoice();
-char processKeyboardInput(char ch);
-bool pressedWrongKey(char ch);
+char processKeyboardInput(char);
+bool pressedWrongKey(char);
 bool wrongTurnAngle(char, char);
+bool selfCollisionOccurred();
 
 void initConsoleParameters();
-void fillTheBoardWithAscii(char (*ptr)[map_size_y]);
-void board_print(char (*ptr)[map_size_y], COORD begin);
+void fillTheBoardWithAscii(char (*)[map_size_y]);
+void printBoard(char (*)[map_size_y], COORD);
 void wait(short int);
+void updateSnakeMoveDirection(int, struct snake *, char (*)[map_size_y]);
 
-void snake_init(struct snake *s);
-void printSnakeAtStartPos(char (*ptr)[map_size_y], struct snake *s);
+void initSnake(struct snake *s);
+void printSnakeAtStartPos(char (*)[map_size_y], struct snake *s);
 
-void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y);
-void append(struct snake *s, struct point *p, short int difficulty);
+void movement(char (*)[map_size_y], struct snake *s, int move_x, int move_y);
+void append(struct snake *s, struct point *p);
 
 void gameOverSound();
 
@@ -38,8 +42,8 @@ int main() {
 	difficulty = easy;
 	int pressedKey;
 	char choice = 0;
-	char tab[map_size_x][map_size_y];
-	char (*t_ptr)[map_size_y]= tab;
+	char board[map_size_x][map_size_y];
+	char (*board_ptr)[map_size_y] = board;
 
     initConsoleParameters();
 
@@ -50,12 +54,13 @@ int main() {
 
 		struct snake *snake_ptr = (struct snake*)malloc(sizeof(struct snake));
 		struct point *point_ptr = (struct point*)malloc(sizeof(struct point));
-		fillTheBoardWithAscii(t_ptr);
-		snake_init(snake_ptr);
-		printSnakeAtStartPos(t_ptr,snake_ptr);
-		randomFoodPoint(snake_ptr,point_ptr, t_ptr);
-		printFoodPoint(point_ptr, t_ptr);
-		board_print(t_ptr, startPosition);
+
+		fillTheBoardWithAscii(board_ptr);
+		initSnake(snake_ptr);
+		printSnakeAtStartPos(board_ptr,snake_ptr);
+		randomFoodPoint(snake_ptr, point_ptr, board_ptr);
+		printFoodPoint(point_ptr, board_ptr);
+		printBoard(board_ptr, startPosition);
 		pressedKey = 0;
 
 		while(!snake_ptr->status) //game session loop
@@ -63,25 +68,18 @@ int main() {
 			if( kbhit() )
 			{
                 pressedKey = processKeyboardInput(pressedKey);
-                switch(pressedKey)
-                {
-                    case KEY_DOWN: movement(t_ptr, snake_ptr, 1, 0);	break;
-                    case KEY_UP: movement(t_ptr, snake_ptr, -1,0);	break;
-                    case KEY_LEFT: movement(t_ptr, snake_ptr, 0,-1);	break;
-                    case KEY_RIGHT: movement(t_ptr, snake_ptr, 0,1);	break;
-                    default: ;
-                }
+                updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
 			}
 
-			board_print(t_ptr, startPosition);
-			printFoodPoint(point_ptr, t_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
+			printBoard(board_ptr, startPosition);
+			printFoodPoint(point_ptr, board_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
 
 			if( scoredPoint(snake_ptr, point_ptr) )
 			{
 				pointScoredSound();
-				append(snake_ptr,point_ptr,difficulty);
-				randomFoodPoint(snake_ptr,point_ptr, t_ptr);
-				printFoodPoint(point_ptr, t_ptr);
+				append(snake_ptr, point_ptr);
+				randomFoodPoint(snake_ptr, point_ptr, board_ptr);
+				printFoodPoint(point_ptr, board_ptr);
 			}
 
 			wait(difficulty);
@@ -99,6 +97,111 @@ int main() {
 		free(snake_ptr);
 		free(point_ptr);
 	}//end of the program
+}
+
+void append(struct snake *s, struct point *p) //dodaje element na koniec weza
+{
+	struct node *element = (struct node*)malloc(sizeof(struct node));
+	element->prev = NULL;
+
+	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
+
+	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
+		element->_x = s->head->_x;
+		element->_y = s->head->_y;
+		element->next = s->head;
+		s->head->prev = element;
+		s->tail = element;
+	}
+	else
+	{
+		element->_x = s->tail->_x;
+		element->_y = s->tail->_y;
+		element->next = s->tail;
+		s->tail->prev = element;
+		s->tail = element;
+	}
+
+	s->length++;
+
+	if(difficulty==easy)
+		s->score += (s->length*0.4) * (difficulty*0.1);
+	else if(difficulty==medium)
+		s->score += (s->length*0.4) * (difficulty*0.2);
+	else
+		s->score += (s->length*0.4) * (difficulty*0.4);
+}
+
+
+void movement(char (*ptr)[map_size_y], struct snake *s, int deltaX, int deltaY) //efekt kilku dni debugowania i pisania wszystkiego od nowa
+{
+	if(gameOverConditionsFulfilled(s))
+	{
+			s->status=true;
+			gameOverSound();
+	}
+	else
+	{
+		struct node *element = (struct node*)malloc(sizeof(struct node));
+		element = s->head;
+		element->_x += deltaX;
+		element->_y += deltaY;
+		do
+		{
+			ptr[element->_x][element->_y] = SNAKE_TEXTURE;
+
+			//gdy waz ma jeden element
+			if(s->tail==NULL)
+			{
+				ptr[element->x][element->y] = 0;
+				s->last_x = element->x;
+				s->last_y = element->y;
+				element->x = element->_x;
+				element->y = element->_y;
+			}
+
+			if(element->prev)
+			{
+				element = element->prev;
+				if(element->prev==NULL)
+				{
+					s->last_x = element->_x;
+					s->last_y = element->_y;
+					s->tail->_x = element->next->x;
+					s->tail->_y = element->next->y;
+					s->tail->x = s->last_x;
+					s->tail->y = s->last_y;
+					element->next->x = element->next->_x;
+					element->next->y = element->next->_y;
+					ptr[s->last_x][s->last_y] = 0;
+				}
+				else{
+
+					element->_x = element->next->x;
+					element->_y = element->next->y;
+					element->next->x = element->next->_x;
+					element->next->y = element->next->_y;
+				}
+			}
+
+            checkForSelfCollision(s, element);
+
+			s->field[element->_x][element->_y] = true;
+			s->field[s->last_x][s->last_y] = false;
+		}while(element->prev);
+	}
+}
+
+void updateSnakeMoveDirection(int pressedKey, struct snake *snake_ptr, char (*board_ptr)[map_size_y])
+{
+    switch(pressedKey)
+    {
+        case KEY_DOWN: movement(board_ptr, snake_ptr, 1, 0);	break;
+        case KEY_UP: movement(board_ptr, snake_ptr, -1,0);	break;
+        case KEY_LEFT: movement(board_ptr, snake_ptr, 0,-1);	break;
+        case KEY_RIGHT: movement(board_ptr, snake_ptr, 0,1);	break;
+        default: ;
+    }
 }
 
 void processUserChoice(){
@@ -214,11 +317,10 @@ void fillTheBoardWithAscii(char (*ptr)[map_size_y])
 	}
 }
 
-void snake_init(struct snake *s) //chyba mozna to bylo krocej napisac ale boje sie bo dziala
+void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje sie bo dziala
 {
 	int i,j;
 	struct node *_head = (struct node*)malloc(sizeof(struct node));
-	//struct node *_tail = (struct node*)malloc(sizeof(struct node));
 	_head->x = 5;
 	_head->y = 5;
 	_head->_x = 5;
@@ -229,7 +331,7 @@ void snake_init(struct snake *s) //chyba mozna to bylo krocej napisac ale boje s
 	s->tail = NULL;
 	s->last_x = 5;
 	s->last_y = 5;
-	s->count = 1;
+	s->length = 1;
 	s->score = 1;
 	s->status = false;
 
@@ -239,7 +341,7 @@ void snake_init(struct snake *s) //chyba mozna to bylo krocej napisac ale boje s
 	s->field[5][5] = true;
 }
 
-void board_print(char (*ptr)[map_size_y], COORD begin)
+void printBoard(char (*ptr)[map_size_y], COORD begin)
 {
 	int i,j;
 	SetConsoleCursorPosition(wHnd,begin);
@@ -276,104 +378,20 @@ bool selfCollision(struct snake *s, struct node *element){
         return false;
 }
 
+void checkForSelfCollision(struct snake *s, struct node *element)
+{
+    if(s->tail)
+    {
+        if(selfCollision(s, element))
+        {
+            gameOverSound();
+            s->status=true;
+        }
+    }
+}
+
 void gameOverSound()
 {
     Beep(100,400);
 }
-
-void movement(char (*ptr)[map_size_y], struct snake *s, int move_x, int move_y) //efekt kilku dni debugowania i pisania wszystkiego od nowa
-{
-	if(gameOverConditionsFulfilled(s))
-	{
-			s->status=true;
-			gameOverSound();
-	}
-	else
-	{
-		struct node *element = (struct node*)malloc(sizeof(struct node));
-		element = s->head;
-		element->_x += move_x;
-		element->_y += move_y;
-		do
-		{
-			ptr[element->_x][element->_y] = SNAKE_TEXTURE;
-			//gdy waz ma jeden element
-			if(s->tail==NULL)
-			{
-				ptr[element->x][element->y] = 0;
-				s->last_x = element->x;
-				s->last_y = element->y;
-				element->x = element->_x;
-				element->y = element->_y;
-			}
-			//
-			if(element->prev)
-			{
-				element = element->prev;
-				if(element->prev==NULL)
-				{
-					s->last_x = element->_x;
-					s->last_y = element->_y;
-					s->tail->_x = element->next->x;
-					s->tail->_y = element->next->y;
-					s->tail->x = s->last_x;
-					s->tail->y = s->last_y;
-					element->next->x = element->next->_x;
-					element->next->y = element->next->_y;
-					ptr[s->last_x][s->last_y] = 0;
-				}
-				else{
-
-					element->_x = element->next->x;
-					element->_y = element->next->y;
-					element->next->x = element->next->_x;
-					element->next->y = element->next->_y;
-				}
-			}
-
-			if(s->tail)
-            {
-				if(selfCollision(s, element))
-				{
-				    gameOverSound();
-					s->status=true;
-				}
-            }
-			s->field[element->_x][element->_y] = true;
-			s->field[s->last_x][s->last_y] = false;
-		}while(element->prev);
-	}
-}
-
-void append(struct snake *s, struct point *p, short int difficulty) //dodaje element na koniec weza
-{
-	struct node *element = (struct node*)malloc(sizeof(struct node));
-	element->prev = NULL;
-	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
-	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
-		element->_x = s->head->_x;
-		element->_y = s->head->_y;
-		element->next = s->head;
-		s->head->prev = element;
-		s->tail = element;
-	}
-	else
-	{
-		element->_x = s->tail->_x;
-		element->_y = s->tail->_y;
-		element->next = s->tail;
-		s->tail->prev = element;
-		s->tail = element;
-	}
-
-	s->count++;
-
-	if(difficulty==easy)
-		s->score += (s->count*0.4) * (difficulty*0.1);
-	else if(difficulty==medium)
-		s->score += (s->count*0.4) * (difficulty*0.2);
-	else
-		s->score += (s->count*0.4) * (difficulty*0.4);
-}
-
 

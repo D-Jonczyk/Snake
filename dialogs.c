@@ -1,6 +1,6 @@
 #include "dialogs.h"
 
-char menu_option(void)
+char getUserMenuChoice(void)
 {
 	char choice;
 	do{
@@ -17,10 +17,10 @@ char menu_option(void)
 	return choice;
 }
 
-void menu(void)
+void printMainMenu(void)
 {
 	SetConsoleTextAttribute(wHnd, BACKGROUND_GREEN | BACKGROUND_RED  | FOREGROUND_RED);
-	printf("\n\n\n");
+	printf("\n\n");
 	printf("-------------------------\n");
 	printf("[1] Nowa gra\t\t\n");
 	printf("[2] Poziom trudnosci\t\n");
@@ -28,7 +28,7 @@ void menu(void)
 	printf("-------------------------\n");
 }
 
-void menu_difficulty(void)
+void printDifficultyMenu(void)
 {
 	printf("\n");
 	printf("-------------------------\n");
