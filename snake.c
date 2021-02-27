@@ -34,6 +34,7 @@ void printSnakeAtStartPos(char (*)[map_size_y], struct snake *s);
 
 void movement(char (*)[map_size_y], struct snake *s, int move_x, int move_y);
 void append(struct snake *s, struct point *p);
+void addPoints(struct snake *s);
 
 void gameOverSound();
 
@@ -78,6 +79,7 @@ int main() {
 			{
 				pointScoredSound();
 				append(snake_ptr, point_ptr);
+				addPoints(snake_ptr);
 				randomFoodPoint(snake_ptr, point_ptr, board_ptr);
 				printFoodPoint(point_ptr, board_ptr);
 			}
@@ -106,23 +108,26 @@ void append(struct snake *s, struct point *p) //dodaje element na koniec weza
 
 	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
 
-	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
+	//if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
 		element->_x = s->head->_x;
 		element->_y = s->head->_y;
 		element->next = s->head;
 		s->head->prev = element;
 		s->tail = element;
-	}
-	else
-	{
-		element->_x = s->tail->_x;
-		element->_y = s->tail->_y;
-		element->next = s->tail;
-		s->tail->prev = element;
-		s->tail = element;
-	}
+	//}
+	//else
+	//{
+	//	element->_x = s->tail->_x;
+	//	element->_y = s->tail->_y;
+	//	element->next = s->tail;
+	//	s->tail->prev = element;
+	//	s->tail = element;
+	//}
+}
 
-	s->length++;
+void addPoints(struct snake *s)
+{
+    s->length++;
 
 	if(difficulty==easy)
 		s->score += (s->length*0.4) * (difficulty*0.1);
@@ -131,7 +136,6 @@ void append(struct snake *s, struct point *p) //dodaje element na koniec weza
 	else
 		s->score += (s->length*0.4) * (difficulty*0.4);
 }
-
 
 void movement(char (*ptr)[map_size_y], struct snake *s, int deltaX, int deltaY) //efekt kilku dni debugowania i pisania wszystkiego od nowa
 {
