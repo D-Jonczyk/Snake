@@ -13,7 +13,7 @@ void gameOverSound();
 
 extern int difficulty;
 
-int main()
+int main(void)
 {
     srand(time(NULL));
     difficulty = easy;
