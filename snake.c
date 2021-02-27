@@ -35,6 +35,7 @@ void printSnakeAtStartPos(char (*)[map_size_y], struct snake *s);
 void movement(char (*)[map_size_y], struct snake *s, int move_x, int move_y);
 void append(struct snake *s, struct point *p);
 void addPoints(struct snake *s);
+void freeSnakeNodes(struct snake *s);
 
 void gameOverSound();
 
@@ -53,7 +54,7 @@ int main() {
 		printMainMenu();
 		processUserChoice();
 
-		struct snake *snake_ptr = (struct snake*)malloc(sizeof(struct snake));
+		struct snake *snake_ptr = (struct snake*)malloc(sizeof(struct snake) * (sizeof(struct node) * 100));
 		struct point *point_ptr = (struct point*)malloc(sizeof(struct point));
 
 		fillTheBoardWithAscii(board_ptr);
@@ -70,7 +71,8 @@ int main() {
 			{
                 pressedKey = processKeyboardInput(pressedKey);
 			}
-            updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
+			updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
+
 			printBoard(board_ptr, startPosition);
 			printFoodPoint(point_ptr, board_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
 
@@ -95,33 +97,44 @@ int main() {
 
 		SetConsoleCursorPosition(wHnd, gameOverPosition);
 		printf("You lost!\n");
+		freeSnakeNodes(snake_ptr);
 		free(snake_ptr);
 		free(point_ptr);
 	}//end of the program
 }
 
+void freeSnakeNodes(struct snake *s)
+{
+    struct node *element;
+    while((element = s->head) != NULL)
+    {
+        s->head = s->head->next;
+        free(element);
+    }
+}
+
 void append(struct snake *s, struct point *p) //dodaje element na koniec weza
 {
 	struct node *newTail = (struct node*)malloc(sizeof(struct node));
-	newTail->prev = NULL;
+	newTail->next = NULL;
+    newTail->newX = p->x;
+    newTail->newY = p->y;
 
-	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
+    if(s->head == s->tail){
+        newTail->prev = s->head;
+        s->head->next = newTail;
+        s->tail = newTail;
+    }
+    else
+    {
+        newTail->newX = s->tail->x;
+        newTail->newY = s->tail->y;
 
-	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
-		newTail->newX = p->x;
-		newTail->newY = p->y;
-		newTail->next = s->head;
-		s->head->prev = newTail;
-		s->tail = newTail;
-	}
-	else
-	{
-		newTail->newX = s->tail->newX;
-		newTail->newY = s->tail->newY;
-		newTail->next = s->tail;
-		s->tail->prev = newTail;
-		s->tail = newTail;
-	}
+        s->tail->next = newTail;
+        newTail->prev = s->tail;
+
+        s->tail = newTail;
+    }
 }
 
 void movement(char (*board)[map_size_y], struct snake *s, int deltaX, int deltaY) //efekt kilku dni debugowania i pisania wszystkiego od nowa
@@ -141,7 +154,7 @@ void movement(char (*board)[map_size_y], struct snake *s, int deltaX, int deltaY
 			board[snakeHead->newX][snakeHead->newY] = SNAKE_TEXTURE;
 
 			//gdy waz ma jeden element
-			if(s->tail==NULL)
+			if(s->head == s->tail)
 			{
 				board[snakeHead->x][snakeHead->y] = 0;
 				s->last_x = snakeHead->x;
@@ -150,36 +163,60 @@ void movement(char (*board)[map_size_y], struct snake *s, int deltaX, int deltaY
 				snakeHead->y = snakeHead->newY;
 			}
 
-			if(snakeHead->prev)
+			if(snakeHead->next)
 			{
-				snakeHead = snakeHead->prev;
-				if(snakeHead->prev==NULL)
+				snakeHead = snakeHead->next;
+				if(snakeHead->next==NULL)
 				{
 					s->last_x = snakeHead->newX;
 					s->last_y = snakeHead->newY;
-					s->tail->newX = snakeHead->next->x;
-					s->tail->newY = snakeHead->next->y;
+					s->tail->newX = snakeHead->prev->x;
+					s->tail->newY = snakeHead->prev->y;
 					s->tail->x = s->last_x;
 					s->tail->y = s->last_y;
-					snakeHead->next->x = snakeHead->next->newX;
-					snakeHead->next->y = snakeHead->next->newY;
-					board[s->last_x][s->last_y] = 0;
+					snakeHead->prev->x = snakeHead->prev->newX;
+					snakeHead->prev->y = snakeHead->prev->newY;
+					board[s->tail->newX][s->tail->newY] = 0;
 				}
-				else{
-
-					snakeHead->newX = snakeHead->next->x;
-					snakeHead->newY = snakeHead->next->y;
-					snakeHead->next->x = snakeHead->next->newX;
-					snakeHead->next->y = snakeHead->next->newY;
+				else
+                {
+					snakeHead->newX = snakeHead->prev->x;
+					snakeHead->newY = snakeHead->prev->y;
+					snakeHead->prev->x = snakeHead->prev->newX;
+					snakeHead->prev->y = snakeHead->prev->newY;
 				}
 			}
 
-            checkForSelfCollision(s, snakeHead);
+            //checkForSelfCollision(s, snakeHead);
 
 			s->fieldsOccupiedBySnake[snakeHead->newX][snakeHead->newY] = true;
 			s->fieldsOccupiedBySnake[s->last_x][s->last_y] = false;
-		}while(snakeHead->prev);
+		}while(snakeHead->next != NULL);
 	}
+}
+
+void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje sie bo dziala
+{
+	int i,j;
+	struct node *head = (struct node*)malloc(sizeof(struct node));
+	head->x = 5;
+	head->y = 5;
+	head->newX = 5;
+	head->newY = 5;
+	head->next = NULL;
+	head->prev = NULL;
+	s->head = head;
+	s->tail = head;
+	s->last_x = 5;
+	s->last_y = 5;
+	s->length = 1;
+	s->score = 1;
+	s->isAlive = true;
+
+	for(i=0;i<map_size_x;i++)
+		for(j=0;j<map_size_y;j++)
+			s->fieldsOccupiedBySnake[i][j] = false;
+	s->fieldsOccupiedBySnake[5][5] = true;
 }
 
 void addPoints(struct snake *s)
@@ -319,30 +356,6 @@ void fillTheBoardWithAscii(char (*ptr)[map_size_y])
 	}
 }
 
-void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje sie bo dziala
-{
-	int i,j;
-	struct node *_head = (struct node*)malloc(sizeof(struct node));
-	_head->x = 5;
-	_head->y = 5;
-	_head->newX = 5;
-	_head->newY = 5;
-	_head->next = NULL;
-	_head->prev = NULL;
-	s->head = _head;
-	s->tail = NULL;
-	s->last_x = 5;
-	s->last_y = 5;
-	s->length = 1;
-	s->score = 1;
-	s->isAlive = true;
-
-	for(i=0;i<map_size_x;i++)
-		for(j=0;j<map_size_y;j++)
-			s->fieldsOccupiedBySnake[i][j] = false;
-	s->fieldsOccupiedBySnake[5][5] = true;
-}
-
 void printBoard(char (*ptr)[map_size_y], COORD begin)
 {
 	int i,j;
@@ -367,7 +380,7 @@ void printSnakeAtStartPos(char (*ptr)[map_size_y], struct snake *s) //ustawia gl
 
 bool gameOverConditionsFulfilled(struct snake *s)
 {
-    if( s->head->newX >= map_size_x-1 ||s->head->newX <= 0 || s->head->newY >= (map_size_y-1) || s->head->newY <= 0)
+    if( s->head->newX >= map_size_x-1 || s->head->newX <= 0 || s->head->newY >= (map_size_y-1) || s->head->newY <= 0)
         return true;
     else
         return false;
