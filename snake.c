@@ -64,14 +64,13 @@ int main() {
 		printBoard(board_ptr, startPosition);
 		pressedKey = 0;
 
-		while(!snake_ptr->status) //game session loop
+		while(snake_ptr->isAlive) //game session loop
 		{
 			if( kbhit() )
 			{
                 pressedKey = processKeyboardInput(pressedKey);
-                updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
 			}
-
+            updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
 			printBoard(board_ptr, startPosition);
 			printFoodPoint(point_ptr, board_ptr); //fix rzadkiego buga gdy punkt znikal z mapy
 
@@ -103,26 +102,84 @@ int main() {
 
 void append(struct snake *s, struct point *p) //dodaje element na koniec weza
 {
-	struct node *element = (struct node*)malloc(sizeof(struct node));
-	element->prev = NULL;
+	struct node *newTail = (struct node*)malloc(sizeof(struct node));
+	newTail->prev = NULL;
 
 	//to nie powinno tak chyba dzia³aæ - gdy jest jeden element to jest on  zarowno glowa jak i ogonem, sprawdzic to i poprawic
 
-	//if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
-		element->_x = s->head->_x;
-		element->_y = s->head->_y;
-		element->next = s->head;
-		s->head->prev = element;
-		s->tail = element;
-	//}
-	//else
-	//{
-	//	element->_x = s->tail->_x;
-	//	element->_y = s->tail->_y;
-	//	element->next = s->tail;
-	//	s->tail->prev = element;
-	//	s->tail = element;
-	//}
+	if(s->tail==NULL){ //gdy tail nie istnieje(sama glowa)
+		newTail->newX = p->x;
+		newTail->newY = p->y;
+		newTail->next = s->head;
+		s->head->prev = newTail;
+		s->tail = newTail;
+	}
+	else
+	{
+		newTail->newX = s->tail->newX;
+		newTail->newY = s->tail->newY;
+		newTail->next = s->tail;
+		s->tail->prev = newTail;
+		s->tail = newTail;
+	}
+}
+
+void movement(char (*board)[map_size_y], struct snake *s, int deltaX, int deltaY) //efekt kilku dni debugowania i pisania wszystkiego od nowa
+{
+	if(gameOverConditionsFulfilled(s))
+	{
+			s->isAlive=false;
+			gameOverSound();
+	}
+	else
+	{
+		struct node *snakeHead = s->head;
+		snakeHead->newX += deltaX;
+		snakeHead->newY += deltaY;
+		do
+		{
+			board[snakeHead->newX][snakeHead->newY] = SNAKE_TEXTURE;
+
+			//gdy waz ma jeden element
+			if(s->tail==NULL)
+			{
+				board[snakeHead->x][snakeHead->y] = 0;
+				s->last_x = snakeHead->x;
+				s->last_y = snakeHead->y;
+				snakeHead->x = snakeHead->newX;
+				snakeHead->y = snakeHead->newY;
+			}
+
+			if(snakeHead->prev)
+			{
+				snakeHead = snakeHead->prev;
+				if(snakeHead->prev==NULL)
+				{
+					s->last_x = snakeHead->newX;
+					s->last_y = snakeHead->newY;
+					s->tail->newX = snakeHead->next->x;
+					s->tail->newY = snakeHead->next->y;
+					s->tail->x = s->last_x;
+					s->tail->y = s->last_y;
+					snakeHead->next->x = snakeHead->next->newX;
+					snakeHead->next->y = snakeHead->next->newY;
+					board[s->last_x][s->last_y] = 0;
+				}
+				else{
+
+					snakeHead->newX = snakeHead->next->x;
+					snakeHead->newY = snakeHead->next->y;
+					snakeHead->next->x = snakeHead->next->newX;
+					snakeHead->next->y = snakeHead->next->newY;
+				}
+			}
+
+            checkForSelfCollision(s, snakeHead);
+
+			s->field[snakeHead->newX][snakeHead->newY] = true;
+			s->field[s->last_x][s->last_y] = false;
+		}while(snakeHead->prev);
+	}
 }
 
 void addPoints(struct snake *s)
@@ -135,65 +192,6 @@ void addPoints(struct snake *s)
 		s->score += (s->length*0.4) * (difficulty*0.2);
 	else
 		s->score += (s->length*0.4) * (difficulty*0.4);
-}
-
-void movement(char (*ptr)[map_size_y], struct snake *s, int deltaX, int deltaY) //efekt kilku dni debugowania i pisania wszystkiego od nowa
-{
-	if(gameOverConditionsFulfilled(s))
-	{
-			s->status=true;
-			gameOverSound();
-	}
-	else
-	{
-		struct node *element = (struct node*)malloc(sizeof(struct node));
-		element = s->head;
-		element->_x += deltaX;
-		element->_y += deltaY;
-		do
-		{
-			ptr[element->_x][element->_y] = SNAKE_TEXTURE;
-
-			//gdy waz ma jeden element
-			if(s->tail==NULL)
-			{
-				ptr[element->x][element->y] = 0;
-				s->last_x = element->x;
-				s->last_y = element->y;
-				element->x = element->_x;
-				element->y = element->_y;
-			}
-
-			if(element->prev)
-			{
-				element = element->prev;
-				if(element->prev==NULL)
-				{
-					s->last_x = element->_x;
-					s->last_y = element->_y;
-					s->tail->_x = element->next->x;
-					s->tail->_y = element->next->y;
-					s->tail->x = s->last_x;
-					s->tail->y = s->last_y;
-					element->next->x = element->next->_x;
-					element->next->y = element->next->_y;
-					ptr[s->last_x][s->last_y] = 0;
-				}
-				else{
-
-					element->_x = element->next->x;
-					element->_y = element->next->y;
-					element->next->x = element->next->_x;
-					element->next->y = element->next->_y;
-				}
-			}
-
-            checkForSelfCollision(s, element);
-
-			s->field[element->_x][element->_y] = true;
-			s->field[s->last_x][s->last_y] = false;
-		}while(element->prev);
-	}
 }
 
 void updateSnakeMoveDirection(int pressedKey, struct snake *snake_ptr, char (*board_ptr)[map_size_y])
@@ -327,8 +325,8 @@ void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje si
 	struct node *_head = (struct node*)malloc(sizeof(struct node));
 	_head->x = 5;
 	_head->y = 5;
-	_head->_x = 5;
-	_head->_y = 5;
+	_head->newX = 5;
+	_head->newY = 5;
 	_head->next = NULL;
 	_head->prev = NULL;
 	s->head = _head;
@@ -337,7 +335,7 @@ void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje si
 	s->last_y = 5;
 	s->length = 1;
 	s->score = 1;
-	s->status = false;
+	s->isAlive = true;
 
 	for(i=0;i<map_size_x;i++)
 		for(j=0;j<map_size_y;j++)
@@ -364,19 +362,19 @@ void wait(short int difficulty)
 
 void printSnakeAtStartPos(char (*ptr)[map_size_y], struct snake *s) //ustawia glowke na poczatkowe koordynaty
 {
-	ptr[s->head->_x][s->head->_y] = SNAKE_TEXTURE;
+	ptr[s->head->newX][s->head->newY] = SNAKE_TEXTURE;
 }
 
 bool gameOverConditionsFulfilled(struct snake *s)
 {
-    if( s->head->_x >= map_size_x-1 ||s->head->_x <= 0 || s->head->_y >= (map_size_y-1) || s->head->_y <= 0)
+    if( s->head->newX >= map_size_x-1 ||s->head->newX <= 0 || s->head->newY >= (map_size_y-1) || s->head->newY <= 0)
         return true;
     else
         return false;
 }
 
 bool selfCollision(struct snake *s, struct node *element){
-    if( (s->head->_x == element->_x) && (s->head->_y == element->_y) )
+    if( (s->head->newX == element->newX) && (s->head->newY == element->newY) )
         return true;
     else
         return false;
@@ -389,7 +387,7 @@ void checkForSelfCollision(struct snake *s, struct node *element)
         if(selfCollision(s, element))
         {
             gameOverSound();
-            s->status=true;
+            s->isAlive=false;
         }
     }
 }
