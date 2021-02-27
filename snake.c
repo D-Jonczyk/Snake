@@ -1,18 +1,10 @@
+//    Snake based on doubly linked list
+
 #include <time.h>
 
 #include "dialogs.h"
 #include "food_point.h"
 #include "string.h"
-
-//    SNAKE NA PODSTAWIE LISTY DWUKIERUNKOWEJ
-
-/*TODO:
-[krytyczne]:
----------
-[opcjonalne]:
-        -poziomy
-        -jakies podpowiedzi co do klawiszy
-*/
 
 static int difficulty;
 
@@ -76,7 +68,7 @@ int main()
             }
             updateSnakeMoveDirection(pressedKey, snake_ptr, board_ptr);
             printBoard(board_ptr, startPosition);
-            printFoodPoint(point_ptr, board_ptr); // fix rzadkiego buga gdy punkt znikal z mapy
+            printFoodPoint(point_ptr, board_ptr);
 
             if (scoredPoint(snake_ptr, point_ptr)) {
                 pointScoredSound();
@@ -377,7 +369,7 @@ void wait(short int difficulty)
 
 void printSnakeAtStartPos(
     char (*ptr)[map_size_y],
-    struct snake* s) // ustawia glowke na poczatkowe koordynaty
+    struct snake* s)
 {
     ptr[s->head->newX][s->head->newY] = SNAKE_TEXTURE;
 }

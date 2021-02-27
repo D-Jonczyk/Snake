@@ -22,9 +22,9 @@ void printMainMenu(void)
 	SetConsoleTextAttribute(wHnd, BACKGROUND_GREEN | BACKGROUND_RED  | FOREGROUND_RED);
 	printf("\n\n");
 	printf("-------------------------\n");
-	printf("[1] Nowa gra\t\t\n");
-	printf("[2] Poziom trudnosci\t\n");
-	printf("[3] Wyjscie\t\t\n");
+	printf("[1] New Game\t\t\n");
+	printf("[2] Difficulty\t\n");
+	printf("[3] Exit\t\t\n");
 	printf("-------------------------\n");
 }
 
@@ -32,8 +32,8 @@ void printDifficultyMenu(void)
 {
 	printf("\n");
 	printf("-------------------------\n");
-	printf("[1] Latwy\t\t\n");
-	printf("[2] Sredni\t\n");
-	printf("[3] Trudny\t\t\n");
+	printf("[1] Easy\t\t\n");
+	printf("[2] Medium\t\n");
+	printf("[3] Hard\t\t\n");
 	printf("-------------------------\n");
 }
