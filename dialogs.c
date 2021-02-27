@@ -16,6 +16,7 @@ char getUserMenuChoice(void)
             choice = '0';
         }
     } while (choice == '0');
+
     return choice;
 }
 
@@ -40,7 +41,7 @@ void printDifficultyMenu(void)
     printf("-------------------------\n");
 }
 
-void processUserChoice()
+void processUserChoice(void)
 {
     char choice = getUserMenuChoice();
     switch (choice) {

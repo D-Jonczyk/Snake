@@ -17,6 +17,7 @@ bool scoredPoint(struct snake* s, struct point* p)
 {
     if (s->head->newX == p->x && s->head->newY == p->y)
         return true;
+
     return false;
 }
 

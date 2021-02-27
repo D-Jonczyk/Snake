@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <windows.h>
+#include <string.h>
+
 
 #define GAME_VERSION "1.1"
 
