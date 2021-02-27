@@ -176,8 +176,8 @@ void movement(char (*board)[map_size_y], struct snake *s, int deltaX, int deltaY
 
             checkForSelfCollision(s, snakeHead);
 
-			s->field[snakeHead->newX][snakeHead->newY] = true;
-			s->field[s->last_x][s->last_y] = false;
+			s->fieldsOccupiedBySnake[snakeHead->newX][snakeHead->newY] = true;
+			s->fieldsOccupiedBySnake[s->last_x][s->last_y] = false;
 		}while(snakeHead->prev);
 	}
 }
@@ -339,8 +339,8 @@ void initSnake(struct snake *s) //chyba mozna to bylo krocej napisac ale boje si
 
 	for(i=0;i<map_size_x;i++)
 		for(j=0;j<map_size_y;j++)
-			s->field[i][j] = false;
-	s->field[5][5] = true;
+			s->fieldsOccupiedBySnake[i][j] = false;
+	s->fieldsOccupiedBySnake[5][5] = true;
 }
 
 void printBoard(char (*ptr)[map_size_y], COORD begin)

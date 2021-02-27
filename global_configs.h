@@ -41,14 +41,16 @@ struct point{
 struct node{
 	struct node *prev;
 	struct node *next;
-	int x,y, _x, _y;
+	int x,y, newX, newY;
 };
 
 struct snake{
 	struct node *head;
 	struct node *tail;
+
 	long int score;
 	short int length,last_x,last_y;
-	bool field[map_size_x][map_size_y]; //miejsca w ktorych aktualnie znajduje sie waz
-	bool status; //status gry(false=game over)
+
+	bool fieldsOccupiedBySnake[map_size_x][map_size_y];
+	bool isAlive;
 };
