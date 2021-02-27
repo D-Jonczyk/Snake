@@ -5,7 +5,7 @@
 char processKeyboardInput(char);
 
 void programLoop(char (*board_ptr)[map_size_y]);
-void gameLoop(struct snake *snake_ptr, struct point *point_ptr, char (*board_ptr)[map_size_y]);
+void gameLoop(struct snake* snake_ptr, struct point* point_ptr, char (*board_ptr)[map_size_y]);
 
 void updateSnakeMoveDirection(int, struct snake*, char (*)[map_size_y]);
 void movement(char (*)[map_size_y], struct snake* s, int move_x, int move_y);

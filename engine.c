@@ -1,8 +1,8 @@
+#include "collisions.h"
+#include "dialogs.h"
 #include "engine.h"
 #include "food_point.h"
-#include "dialogs.h"
 #include "init_functions.h"
-#include "collisions.h"
 
 extern void gameOverSound();
 extern void freeSnakeNodes(struct snake*);
@@ -12,8 +12,7 @@ int difficulty;
 void programLoop(char (*board_ptr)[map_size_y])
 {
     char choice = 0;
-    while (choice != '3')
-    {
+    while (choice != '3') {
         printMainMenu();
         processUserChoice();
 
@@ -33,12 +32,11 @@ void programLoop(char (*board_ptr)[map_size_y])
     } // end of the program
 }
 
-void gameLoop(struct snake *snake_ptr, struct point *point_ptr, char (*board_ptr)[map_size_y])
+void gameLoop(struct snake* snake_ptr, struct point* point_ptr, char (*board_ptr)[map_size_y])
 {
     int pressedKey = 0;
 
-    while (snake_ptr->isAlive)
-    {
+    while (snake_ptr->isAlive) {
         if (kbhit()) {
             pressedKey = processKeyboardInput(pressedKey);
         }

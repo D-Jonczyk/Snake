@@ -1,7 +1,7 @@
-#include "init_functions.h"
 #include "global_configs.h"
+#include "init_functions.h"
 
-extern void append(struct snake *s);
+extern void append(struct snake* s);
 
 void initSnake(struct snake* s)
 {
