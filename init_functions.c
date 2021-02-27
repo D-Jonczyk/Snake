@@ -1,4 +1,5 @@
 #include "init_functions.h"
+#include "global_configs.h"
 
 extern void append(struct snake *s);
 
@@ -80,5 +81,5 @@ void printSnakeAtStartPos(
     char (*ptr)[map_size_y],
     struct snake* s)
 {
-    ptr[s->head->newX][s->head->newY] = SNAKE_TEXTURE;
+    ptr[5][5] = SNAKE_TEXTURE;
 }

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <conio.h>
+#include <time.h>
 
 #define GAME_VERSION "1.1"
 

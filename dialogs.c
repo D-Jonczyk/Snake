@@ -1,5 +1,7 @@
 #include "dialogs.h"
 
+extern int difficulty;
+
 char getUserMenuChoice(void)
 {
 	char choice;
@@ -36,4 +38,31 @@ void printDifficultyMenu(void)
 	printf("[2] Medium\t\n");
 	printf("[3] Hard\t\t\n");
 	printf("-------------------------\n");
+}
+
+void processUserChoice()
+{
+    char choice = getUserMenuChoice();
+    switch (choice) {
+    case '1':
+        break;
+    case '2':
+        system("cls");
+        printDifficultyMenu();
+        char choice_d = getUserMenuChoice();
+        switch (choice_d) {
+        case '1':
+            difficulty = easy;
+            break;
+        case '2':
+            difficulty = medium;
+            break;
+        case '3':
+            difficulty = hard;
+            break;
+        }
+        break;
+    case '3':
+        exit(0);
+    }
 }
