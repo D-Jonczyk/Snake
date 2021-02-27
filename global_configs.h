@@ -6,6 +6,8 @@
 #include <stdbool.h>
 #include <conio.h>
 
+#define GAME_VERSION "1.1"
+
 #define PAUSE_KEY 112
 #define KEY_UP 72
 #define KEY_DOWN 80
