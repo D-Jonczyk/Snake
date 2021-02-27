@@ -2,11 +2,11 @@
 
 #include <string.h>
 
-#include "global_configs.h"
 #include "dialogs.h"
-#include "food_point.h"
-#include "init_functions.h"
 #include "engine.h"
+#include "food_point.h"
+#include "global_configs.h"
+#include "init_functions.h"
 
 void freeSnakeNodes(struct snake* s);
 void gameOverSound();

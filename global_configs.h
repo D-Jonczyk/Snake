@@ -1,11 +1,11 @@
 #pragma once
 
-#include <windows.h>
+#include <conio.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <conio.h>
 #include <time.h>
+#include <windows.h>
 
 #define GAME_VERSION "1.1"
 
@@ -30,32 +30,32 @@
 #define map_size_y 25
 
 //difficulty levels
-#define easy  18
-#define medium  14
-#define hard  10
+#define easy 18
+#define medium 14
+#define hard 10
 
 HANDLE wHnd;
 
 COORD gameOverPosition;
 COORD startPosition;
 
-struct point{
-	int x,y;
+struct point {
+    int x, y;
 };
 
-struct node{
-	struct node *prev;
-	struct node *next;
-	int x,y, newX, newY;
+struct node {
+    struct node* prev;
+    struct node* next;
+    int x, y, newX, newY;
 };
 
-struct snake{
-	struct node *head;
-	struct node *tail;
+struct snake {
+    struct node* head;
+    struct node* tail;
 
-	long int score;
-	short int length,last_x,last_y;
+    long int score;
+    short int length, last_x, last_y;
 
-	bool fieldsOccupiedBySnake[map_size_x][map_size_y];
-	bool isAlive;
+    bool fieldsOccupiedBySnake[map_size_x][map_size_y];
+    bool isAlive;
 };
