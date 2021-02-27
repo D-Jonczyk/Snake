@@ -7,6 +7,4 @@ void printMainMenu(void);
 void printDifficultyMenu(void);
 char getUserMenuChoice(void);
 
-HANDLE wHnd;
-
 #endif // DIALOGS_H_INCLUDED

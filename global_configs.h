@@ -33,6 +33,8 @@
 #define medium  14
 #define hard  10
 
+HANDLE wHnd;
+
 COORD gameOverPosition;
 COORD startPosition;
 
