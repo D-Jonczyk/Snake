@@ -1,8 +1,6 @@
 //    Snake based on doubly linked list
 
-#include "dialogs.h"
 #include "engine.h"
-#include "food_point.h"
 #include "global_configs.h"
 #include "init_functions.h"
 
