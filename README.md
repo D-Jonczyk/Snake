@@ -11,11 +11,7 @@ Platform: Windows *(tested on 10, should have backwards compatibility)*
   ```
   mkdir build
   cd build
-  cmake ..  #use -G"generator" to use custom generator, otherwise default
+  cmake ..
   (optional: cmake-gui .. for convenient setup)
   cmake --build .
   ```
-2. Makefile
-```
-to be added
-```
