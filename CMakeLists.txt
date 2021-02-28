@@ -11,4 +11,4 @@ if ( MSVC )
     set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} /W0")
 endif()
 
-add_executable(Snake collisions.c dialogs.c engine.c food_point.c init_functions.c main.c)
+add_executable(Snake collisions.c dialogs.c engine.c food_point.c init_functions.c list_handling.c main.c)
