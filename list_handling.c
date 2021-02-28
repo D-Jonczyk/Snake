@@ -1,8 +1,10 @@
 #include "list_handling.h"
+#include "engine.h"
 
 void append(struct snake* s)
 {
     struct node* newTail = (struct node*)malloc(sizeof(struct node));
+    validateMalloc(newTail, TYPE_NODE);
     newTail->next = NULL;
     newTail->newX = s->head->newX;
     newTail->newY = s->head->newY;

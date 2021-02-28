@@ -4,6 +4,8 @@
 
 char processKeyboardInput(char);
 
+void validateMalloc(void *pointer, int type);
+
 void programLoop(char (*board_ptr)[map_size_y]);
 void gameLoop(struct snake* snake_ptr, struct point* point_ptr, char (*board_ptr)[map_size_y]);
 

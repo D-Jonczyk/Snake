@@ -28,6 +28,10 @@
 #define SNAKE_TEXTURE 178
 #define FOOD_TEXTURE 158
 
+#define TYPE_SNAKE 0
+#define TYPE_POINT 1
+#define TYPE_NODE 2
+
 #define map_size_x 15
 #define map_size_y 25
 

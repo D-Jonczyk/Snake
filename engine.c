@@ -19,7 +19,9 @@ void programLoop(char (*board_ptr)[map_size_y])
 
         struct snake* snake_ptr = (struct snake*)malloc(
             sizeof(struct snake) * (sizeof(struct node) * 100));
+        validateMalloc(snake_ptr, TYPE_SNAKE);
         struct point* point_ptr = (struct point*)malloc(sizeof(struct point));
+        validateMalloc(point_ptr, TYPE_POINT);
 
         fillTheBoardWithAscii(board_ptr);
         initSnake(snake_ptr);
@@ -201,4 +203,32 @@ void addPoints(struct snake* s)
         s->score += (s->length * 0.4) * (difficulty * 0.2);
     else
         s->score += (s->length * 0.4) * (difficulty * 0.4);
+}
+
+void validateMalloc(void* structPointer, int type)
+{
+    struct snake* s;
+    struct point* p;
+    struct node* n;
+
+    switch (type) {
+    case TYPE_SNAKE:
+        s = (struct snake*)structPointer;
+        if (s == NULL) {
+            exit(EXIT_FAILURE);
+        }
+        break;
+
+    case TYPE_POINT:
+        p = (struct point*)structPointer;
+        if (p == NULL)
+            exit(EXIT_FAILURE);
+        break;
+
+    case TYPE_NODE:
+        n = (struct node*)structPointer;
+        if (n == NULL)
+            exit(EXIT_FAILURE);
+        break;
+    }
 }

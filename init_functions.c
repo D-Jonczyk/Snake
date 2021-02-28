@@ -7,6 +7,7 @@ void initSnake(struct snake* s)
 {
     int i, j;
     struct node* head = (struct node*)malloc(sizeof(struct node));
+    validateMalloc(head, TYPE_NODE);
     head->x = 5;
     head->y = 5;
     head->newX = 5;
