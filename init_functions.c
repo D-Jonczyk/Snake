@@ -1,5 +1,6 @@
 #include "global_configs.h"
 #include "init_functions.h"
+#include "engine.h"
 
 extern void append(struct snake* s);
 
