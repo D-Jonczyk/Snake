@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "food_point.h"
 #include "init_functions.h"
+#include "list_handling.h"
 
 extern void gameOverSound();
 extern void freeSnakeNodes(struct snake*);
@@ -32,7 +33,8 @@ void programLoop(char (*board_ptr)[map_size_y])
     } // end of the program
 }
 
-void gameLoop(struct snake* snake_ptr, struct point* point_ptr, char (*board_ptr)[map_size_y])
+void gameLoop(struct snake* snake_ptr, struct point* point_ptr,
+    char (*board_ptr)[map_size_y])
 {
     int pressedKey = 0;
 
@@ -64,31 +66,7 @@ void gameLoop(struct snake* snake_ptr, struct point* point_ptr, char (*board_ptr
     SetConsoleCursorPosition(wHnd, gameOverPosition);
     printf("You lost!\n");
 
-    freeSnakeNodes(snake_ptr);
-    free(snake_ptr);
-    free(point_ptr);
-}
-
-void append(struct snake* s)
-{
-    struct node* newTail = (struct node*)malloc(sizeof(struct node));
-    newTail->next = NULL;
-    newTail->newX = s->head->newX;
-    newTail->newY = s->head->newY;
-
-    if (s->head == s->tail) {
-        newTail->prev = s->head;
-        s->head->next = newTail;
-        s->tail = newTail;
-    } else {
-        newTail->newX = s->tail->x;
-        newTail->newY = s->tail->y;
-
-        s->tail->next = newTail;
-        newTail->prev = s->tail;
-
-        s->tail = newTail;
-    }
+    freeGameSessionMemory(snake_ptr, point_ptr);
 }
 
 void printBoard(char (*ptr)[map_size_y])
